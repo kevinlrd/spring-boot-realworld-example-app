@@ -27,6 +27,7 @@ public class GraphQlWebConfig {
 
   private static final ObjectMapper GRAPHQL_OBJECT_MAPPER = new ObjectMapper();
   private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<>() {};
+  private static final int MAX_BODY_SIZE = 256 * 1024; // 256 KB
 
   @Bean
   public WebGraphQlHandler webGraphQlHandler(
@@ -48,7 +49,10 @@ public class GraphQlWebConfig {
 
   private ServerResponse handleGraphQlRequest(
       ServerRequest request, WebGraphQlHandler webGraphQlHandler) throws Exception {
-    byte[] body = request.servletRequest().getInputStream().readAllBytes();
+    byte[] body = request.servletRequest().getInputStream().readNBytes(MAX_BODY_SIZE + 1);
+    if (body.length > MAX_BODY_SIZE) {
+      return ServerResponse.status(HttpStatus.BAD_REQUEST).body("Request body too large");
+    }
     Map<String, Object> bodyMap = GRAPHQL_OBJECT_MAPPER.readValue(body, MAP_TYPE_REF);
 
     URI uri = request.uri();
