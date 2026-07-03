@@ -68,16 +68,10 @@ public class GraphQlWebConfig {
             .handleRequest(graphQlRequest)
             .map(
                 graphQlResponse -> {
-                  try {
-                    byte[] responseBytes =
-                        GRAPHQL_OBJECT_MAPPER.writeValueAsBytes(
-                            graphQlResponse.getExecutionResult().toSpecification());
-                    return ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(responseBytes);
-                  } catch (Exception e) {
-                    return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                  }
+                  Map<String, Object> spec = graphQlResponse.getExecutionResult().toSpecification();
+                  return ServerResponse.ok()
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .body(spec);
                 });
 
     return responseMono.block();
